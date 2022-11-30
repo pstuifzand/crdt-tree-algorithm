@@ -3,3 +3,4 @@ dist/
 node_modules/
 server/server
 client/client
+static/website/main.js
