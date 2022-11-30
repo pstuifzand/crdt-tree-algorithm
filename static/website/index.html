@@ -6,26 +6,8 @@
 </head>
 <body>
 <h1>Hello</h1>
-<script src="tree.js"></script>
-
+<script src="/website/main.js"></script>
 <script>
-    const db = new DB("web");
-    const tree = new Tree(db);
-
-    function visit(node, indent) {
-        console.log("--".repeat(indent), node.id)
-        for (const child of node.children) {
-            visit(child, indent+2)
-        }
-    }
-
-    const ws = new WebSocket("ws://127.0.0.1:12345/sub", "pub.sp.nanomsg.org")
-    ws.onmessage = function (ev) {
-        ev.data.text()
-            .then(data => JSON.parse(data))
-            .then(op => db.apply(op, 'remote'))
-            .then(() => visit(tree.root, 0))
-    }
 </script>
 </body>
 </html>

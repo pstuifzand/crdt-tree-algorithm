@@ -155,7 +155,7 @@ func main() {
 
 		fmt.Printf("[%s][%s]\n", childID, parentID)
 		if _, e := tree.nodes[childID]; !e {
-			tree.nodes[childID] = newNodeWithID(childID)
+			tree.nodes[childID] = newNodeWithID(childID, childName)
 		}
 
 		if _, e := tree.nodes[parentID]; e {

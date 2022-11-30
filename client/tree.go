@@ -14,6 +14,7 @@ type Op struct {
 	Value     int    `json:"value"`
 	Peer      string `json:"peer"`
 	Timestamp int64  `json:"timestamp"`
+	Name      string `json:"name"`
 }
 
 type Row struct {
@@ -73,13 +74,14 @@ func Max(a, b int64) int64 {
 	return b
 }
 
-func (db *DB) setValue(idkey IdKey, value int) {
+func (db *DB) setValue(idkey IdKey, value int, name string) {
 	op := Op{
 		ID:        idkey.ID,
 		Key:       idkey.Key,
 		Value:     value,
 		Peer:      db.peer,
 		Timestamp: time.Now().UnixNano(),
+		Name:      name,
 	}
 	if timestamp, e := db.getTimestamp(idkey); e {
 		op.Timestamp = Max(op.Timestamp, timestamp+1)
@@ -113,17 +115,19 @@ type Node struct {
 	id       string
 	parent   *Node
 	children []*Node
+	name     string
 	edges    map[string]int
 	cycle    string // FIXME
 }
 
-func newNodeWithID(id string) *Node {
+func newNodeWithID(id string, name string) *Node {
 	return &Node{
 		id:       id,
 		parent:   nil,
 		children: nil,
 		edges:    make(map[string]int),
 		cycle:    "",
+		name:     name,
 	}
 }
 
@@ -136,7 +140,7 @@ type Tree struct {
 func newTree(db *DB) *Tree {
 	tree := &Tree{
 		db:    db,
-		root:  newNodeWithID("(ROOT)"),
+		root:  newNodeWithID("(ROOT)", "(ROOT)"),
 		nodes: make(map[string]*Node),
 	}
 
@@ -146,11 +150,11 @@ func newTree(db *DB) *Tree {
 		var child *Node
 		child, e := tree.nodes[op.ID]
 		if !e {
-			child = newNodeWithID(op.ID)
+			child = newNodeWithID(op.ID, op.Name)
 			tree.nodes[op.ID] = child
 		}
 		if _, e := tree.nodes[op.Key]; !e {
-			tree.nodes[op.Key] = newNodeWithID(op.Key)
+			tree.nodes[op.Key] = newNodeWithID(op.Key, op.Name+"-parent")
 		}
 
 		if op.Value == -1 {
@@ -331,7 +335,7 @@ func (tree *Tree) addChildToParent(childID, parentID string) {
 			}
 		}
 
-		tree.db.setValue(IdKey{child.id, parent.id}, maxCounter+1)
+		tree.db.setValue(IdKey{child.id, parent.id}, maxCounter+1, child.name)
 	}
 }
 
