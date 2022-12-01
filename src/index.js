@@ -6,6 +6,11 @@ const db = new DB("web");
 const tree = new CRDTTree(db);
 const yytree = new YYTree(tree.root, {parent: document.body})
 
+const wsPush = new WebSocket("ws://127.0.0.1:12345/push", "pull.sp.nanomsg.org")
+db.afterApply(function ({op, origin}) {
+    if (origin === 'local') wsPush.send(JSON.stringify(op))
+})
+
 yytree.on('move', (target, lyytree) => {
     console.log(target.data.id, target.data.parent.id)
     tree.addChildToParent(target.data.id, target.data.parent.id)
